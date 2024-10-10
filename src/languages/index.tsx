@@ -64,7 +64,7 @@ export const Languages = {
       "Août",
       "Septembre",
       "Octobre",
-      "Nom",
+      "Novembre",
       "Décembre",
     ],
     'DAYS': ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"],
