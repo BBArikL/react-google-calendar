@@ -262,7 +262,7 @@ export default class Calendar extends React.Component<
       )),
       days.map((x) => {
         if (
-          x == this.state.today.toJSDate() &&
+          x == this.state.today.day &&
           this.state.current.hasSame(this.state.today, "month")
         ) {
           return (
