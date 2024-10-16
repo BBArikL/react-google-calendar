@@ -2,21 +2,20 @@
  * @jest-environment jsdom
  */
 
-import { describe, test, expect, beforeAll, afterAll } from "vitest"; 
-
+import { act } from "@testing-library/react";
+import { DateTime } from "luxon";
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { act } from "@testing-library/react";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 import MultiEvent from "../src/multiEvent";
-import { DateTime } from "luxon";
 
 let basicProps = {
   borderColor: "black",
   hoverColor: "red",
   textColor: "blue",
   circleColor: "green",
-}
+};
 
 let container;
 let root;
@@ -34,7 +33,7 @@ afterAll(() => {
 });
 
 describe("Multi Event Component", () => {
-  test("opens and closes properly on click",() => {
+  test("opens and closes properly on click", () => {
     let props = {
       name: "Test Event",
       startTime: DateTime.now(),
@@ -45,18 +44,28 @@ describe("Multi Event Component", () => {
       root.render(<MultiEvent {...basicProps} {...props} />);
     });
 
-    expect(window.getComputedStyle(container.querySelector('.tooltip')).visibility).toEqual("hidden");
-    
-    act(() => {
-      container.querySelector(".event-text").dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    expect(window.getComputedStyle(container.querySelector('.tooltip')).visibility).toEqual("visible");
+    expect(
+      window.getComputedStyle(container.querySelector(".tooltip")).visibility,
+    ).toEqual("hidden");
 
     act(() => {
-      container.querySelector(".event-text").dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      container
+        .querySelector(".event-text")
+        .dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(window.getComputedStyle(container.querySelector('.tooltip')).visibility).toEqual("hidden");
+    expect(
+      window.getComputedStyle(container.querySelector(".tooltip")).visibility,
+    ).toEqual("visible");
+
+    act(() => {
+      container
+        .querySelector(".event-text")
+        .dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(
+      window.getComputedStyle(container.querySelector(".tooltip")).visibility,
+    ).toEqual("hidden");
   });
 });

@@ -64,7 +64,7 @@ html {
 
 .innerDay {
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
   width: 100%;
 }
 
@@ -94,7 +94,7 @@ html {
 }
 
 .details {
-  display : flex;
+  display: flex;
   font-size: 14px;
   align-items: center;
   margin-top: 12px;

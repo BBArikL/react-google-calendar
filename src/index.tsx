@@ -1,32 +1,27 @@
 /** @jsxImportSource @emotion/react */
-import React from "react";
-
-import { DateTime } from 'luxon';
-import { rrulestr } from "rrule";
-
-import { CalendarProps, CalendarState } from './types';
-
-import "./index.css";
-
-import Event from "./event";
-import MultiEvent from "./multiEvent";
-
-import { isMultiEvent, to_datetime } from "./utils/helper";
-import { loadCalendarAPI, getEventsList } from "./utils/googleCalendarAPI";
-
-import { css } from '@emotion/react'
-
+import { css } from "@emotion/react";
 import _ from "lodash";
+import { DateTime } from "luxon";
+import React from "react";
+import { rrulestr } from "rrule";
 
 //@ts-ignore
 import gud from "gud";
 
+import Event from "./event";
+import "./index.css";
 import { Languages, availableLanguages } from "./languages";
+import MultiEvent from "./multiEvent";
+import { CalendarProps, CalendarState } from "./types";
 import { EventProps } from "./types/event";
 import { MultiEventProps } from "./types/multiEvent";
+import { getEventsList, loadCalendarAPI } from "./utils/googleCalendarAPI";
+import { isMultiEvent, to_datetime } from "./utils/helper";
 
-
-export default class Calendar extends React.Component<CalendarProps, CalendarState> {
+export default class Calendar extends React.Component<
+  CalendarProps,
+  CalendarState
+> {
   constructor(props: CalendarProps) {
     super(props);
     this.state = {
@@ -35,14 +30,14 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
       today: DateTime.now(),
       current: DateTime.utc().startOf("month"), //current position on calendar (first day of month)
       calendars: [],
-      events: [],//all day or multi day events
+      events: [], //all day or multi day events
       singleEvents: [], //single day events
       userTimezone: DateTime.fromObject({}, { zone: "system" }).zone,
       showFooter: props.showFooter || true,
       showArrow: props.showArrow || true,
       processedCalendars: [],
     };
-    
+
     this.lastMonth = this.lastMonth.bind(this);
     this.nextMonth = this.nextMonth.bind(this);
   }
@@ -68,7 +63,7 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
     //init and load google calendar api
     try {
       const res = await loadCalendarAPI(this.props.apiKey);
-    } catch(err) {
+    } catch (err) {
       console.error("Error loading GAPI client for API", err);
     }
 
@@ -80,18 +75,25 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
 
         //process events
         //@ts-ignore
-        const events = this.processEvents(res.result.items, res.result.summary, calendar.color);
+        const events = this.processEvents(
+          res.result.items,
+          res.result.summary,
+          calendar.color ?? "",
+        );
 
         //fix duplicate calendars
         if (!this.state.processedCalendars.includes(calendar.calendarId)) {
           //set state with calculated values
           this.setState({
-            "events": [...this.state.events, ...events[0]], 
-            "singleEvents": [...this.state.singleEvents, ...events[1]], 
-            "processedCalendars": [...this.state.processedCalendars, calendar.calendarId]
+            events: [...this.state.events, ...events[0]],
+            singleEvents: [...this.state.singleEvents, ...events[1]],
+            processedCalendars: [
+              ...this.state.processedCalendars,
+              calendar.calendarId,
+            ],
           });
         }
-      } catch(err) {
+      } catch (err) {
         console.error("Error getting events", err);
       }
     }
@@ -105,38 +107,54 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
     let cancelled: any[] = [];
 
     items.forEach((event) => {
-      if (event.originalStartTime) { //cancelled or changed events
-        if (event.status == "cancelled") { //cancelled events
+      if (event.originalStartTime) {
+        //cancelled or changed events
+        if (event.status == "cancelled") {
+          //cancelled events
           cancelled.push({
             recurringEventId: event.recurringEventId,
-            originalStartTime: event.originalStartTime.dateTime ? DateTime.fromISO(event.originalStartTime.dateTime) : DateTime.fromISO(event.originalStartTime.date), 
+            originalStartTime: event.originalStartTime.dateTime
+              ? DateTime.fromISO(event.originalStartTime.dateTime)
+              : DateTime.fromISO(event.originalStartTime.date),
           });
-        } else if (event.status == "confirmed") { //changed events
+        } else if (event.status == "confirmed") {
+          //changed events
           changed.push({
             recurringEventId: event.recurringEventId,
             name: event.summary,
             description: event.description,
             location: event.location,
-            originalStartTime: event.originalStartTime.dateTime ? DateTime.fromISO(event.originalStartTime.dateTime) : DateTime.fromISO(event.originalStartTime.date),
-            newStartTime: event.start.dateTime ? DateTime.fromISO(event.start.dateTime) : DateTime.fromISO(event.start.date),
-            newEndTime: event.end.dateTime ? DateTime.fromISO(event.end.dateTime) : DateTime.fromISO(event.end.date),
+            originalStartTime: event.originalStartTime.dateTime
+              ? DateTime.fromISO(event.originalStartTime.dateTime)
+              : DateTime.fromISO(event.originalStartTime.date),
+            newStartTime: event.start.dateTime
+              ? DateTime.fromISO(event.start.dateTime)
+              : DateTime.fromISO(event.start.date),
+            newEndTime: event.end.dateTime
+              ? DateTime.fromISO(event.end.dateTime)
+              : DateTime.fromISO(event.end.date),
           });
         } else {
           console.log("Not categorized: ", event);
         }
-      } else if (event.status == "confirmed") { //normal events
+      } else if (event.status == "confirmed") {
+        //normal events
         let newEvent = {
           id: event.id,
           name: event.summary,
-          startTime: event.start.dateTime ? DateTime.fromISO(event.start.dateTime) : DateTime.fromISO(event.start.date),
-          endTime: event.end.dateTime ? DateTime.fromISO(event.end.dateTime) : DateTime.fromISO(event.end.date),
+          startTime: event.start.dateTime
+            ? DateTime.fromISO(event.start.dateTime)
+            : DateTime.fromISO(event.start.date),
+          endTime: event.end.dateTime
+            ? DateTime.fromISO(event.end.dateTime)
+            : DateTime.fromISO(event.end.date),
           description: event.description,
           location: event.location,
           recurrence: event.recurrence,
           changedEvents: [],
           cancelledEvents: [],
           calendarName: calendarName,
-          color: color
+          color: color,
         };
 
         if (isMultiEvent(newEvent.startTime, newEvent.endTime)) {
@@ -153,28 +171,36 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
     events.forEach((event, idx, arr) => {
       if (event.recurrence) {
         //push changed events
-        changed.filter(change => change.recurringEventId == event.id).forEach((change) => {
-          arr[idx].changedEvents.push(change);
-        });
+        changed
+          .filter((change) => change.recurringEventId == event.id)
+          .forEach((change) => {
+            arr[idx].changedEvents.push(change);
+          });
 
         //push cancelled events
-        cancelled.filter(cancel => cancel.recurringEventId == event.id).forEach((cancel) => {
-          arr[idx].cancelledEvents.push(cancel.originalStartTime);
-        });
+        cancelled
+          .filter((cancel) => cancel.recurringEventId == event.id)
+          .forEach((cancel) => {
+            arr[idx].cancelledEvents.push(cancel.originalStartTime);
+          });
       }
     });
 
     singleEvents.forEach((event, idx, arr) => {
       if (event.recurrence) {
         //push changed events
-        changed.filter(change => change.recurringEventId == event.id).forEach((change) => {
-          arr[idx].changedEvents.push(change);
-        });
+        changed
+          .filter((change) => change.recurringEventId == event.id)
+          .forEach((change) => {
+            arr[idx].changedEvents.push(change);
+          });
 
         //push cancelled events
-        cancelled.filter(cancel => cancel.recurringEventId == event.id).forEach((cancel) => {
-          arr[idx].cancelledEvents.push(cancel.originalStartTime);
-        });
+        cancelled
+          .filter((cancel) => cancel.recurringEventId == event.id)
+          .forEach((cancel) => {
+            arr[idx].cancelledEvents.push(cancel.originalStartTime);
+          });
       }
     });
 
@@ -183,12 +209,12 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
 
   //sets current month to previous month
   lastMonth() {
-    this.setState({ current: this.state.current.minus({month: 1}) });
+    this.setState({ current: this.state.current.minus({ month: 1 }) });
   }
 
   //sets current month to following month
   nextMonth() {
-    this.setState({ current: this.state.current.plus({month: 1}) });
+    this.setState({ current: this.state.current.plus({ month: 1 }) });
   }
 
   clearEvents() {
@@ -200,14 +226,17 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
       }
     }
   }
-  
+
   //renders the day of week names
   renderDays() {
     return this.state.days.map((x, i) => (
       <div
         className="day-name"
         key={"day-of-week-" + i}
-        css={[{ borderColor: "LightGray" }, _.get(this.props.styles, 'day', {})]}
+        css={[
+          { borderColor: "LightGray" },
+          _.get(this.props.styles, "day", {}),
+        ]}
       >
         {x}
       </div>
@@ -220,32 +249,41 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
     // @ts-ignore
     let days = [...Array(currentDaysInMonth + 1).keys()].slice(1); // create array from 1 to number of days in month
     let dayOfWeek = this.state.current.weekday; //get day of week of first day in the month
-    let padDays = (((-currentDaysInMonth - this.state.current.weekday) % 7) + 7) % 7; //number of days to fill out the last row    
+    let padDays =
+      (((-currentDaysInMonth - this.state.current.weekday) % 7) + 7) % 7; //number of days to fill out the last row
 
     return [
       [...Array(dayOfWeek)].map((x, i) => (
         <div
           className="day"
           key={"empty-day-" + i}
-          css={_.get(this.props.styles, 'day', {})}
+          css={_.get(this.props.styles, "day", {})}
         ></div>
       )),
-      days.map(x => {
-        if (x == this.state.today.toJSDate() && this.state.current.hasSame(this.state.today, "month")) {
+      days.map((x) => {
+        if (
+          x == this.state.today.toJSDate() &&
+          this.state.current.hasSame(this.state.today, "month")
+        ) {
           return (
             <div
               className="day"
               key={"day-" + x}
-              css={[_.get(this.props.styles, 'day', {}), _.get(this.props.styles, 'today', {})]}
+              css={[
+                _.get(this.props.styles, "day", {}),
+                _.get(this.props.styles, "today", {}),
+              ]}
             >
               <span
                 css={{
-                  paddingRight: '6px',
+                  paddingRight: "6px",
                 }}
               >
                 {x}
               </span>
-              <div className="innerDay" id={"day-" + x}>{eventsEachDay[x - 1]}</div>
+              <div className="innerDay" id={"day-" + x}>
+                {eventsEachDay[x - 1]}
+              </div>
             </div>
           );
         } else {
@@ -253,16 +291,18 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
             <div
               className="day"
               key={"day-" + x}
-              css={_.get(this.props.styles, 'day', {})}
+              css={_.get(this.props.styles, "day", {})}
             >
               <span
                 css={{
-                  paddingRight: '6px',
+                  paddingRight: "6px",
                 }}
               >
                 {x}
               </span>
-              <div className="innerDay" id={"day-" + x}>{eventsEachDay[x - 1]}</div>
+              <div className="innerDay" id={"day-" + x}>
+                {eventsEachDay[x - 1]}
+              </div>
             </div>
           );
         }
@@ -271,31 +311,46 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
         <div
           className="day"
           key={"empty-day-2-" + i}
-          css={_.get(this.props.styles, 'day', {})}
+          css={_.get(this.props.styles, "day", {})}
         ></div>
-      ))
+      )),
     ];
   }
 
   //get array of arrays of length days in month containing the events in each day
   getRenderEvents(events: any[], singleEvents: any[]) {
-    let eventsEachDay = [...Array(this.state.current.daysInMonth ?? 30)].map((e) => []); //create array of empty arrays of length daysInMonth
+    let eventsEachDay = [...Array(this.state.current.daysInMonth ?? 30)].map(
+      (e) => [],
+    ); //create array of empty arrays of length daysInMonth
     let eventsToRender: EventProps[] = [];
     events.forEach((event) => {
       if (event.recurrence) {
-        let duration = to_datetime(event.endTime).diff(to_datetime(event.startTime));
-        let dates = Calendar.getDatesFromRRule(event.recurrence[0], event.startTime, this.state.current.minus(duration), this.state.current.plus({month: 1}));
+        let duration = to_datetime(event.endTime).diff(
+          to_datetime(event.startTime),
+        );
+        let dates = Calendar.getDatesFromRRule(
+          event.recurrence[0],
+          event.startTime,
+          this.state.current.minus(duration),
+          this.state.current.plus({ month: 1 }),
+        );
 
         //render recurrences
         dates.forEach((date) => {
           //don't render if it is cancelled
-          if (event.cancelledEvents.some((cancelledMoment: any) => (cancelledMoment.isSame(date, "day")))) {
+          if (
+            event.cancelledEvents.some((cancelledMoment: any) =>
+              cancelledMoment.isSame(date, "day"),
+            )
+          ) {
             return;
           }
 
           let props: EventProps;
           //update information if event has changed
-          const changedEvent = event.changedEvents.find((changedEvent: any) => (changedEvent.originalStartTime.isSame(date, "day")));
+          const changedEvent = event.changedEvents.find((changedEvent: any) =>
+            changedEvent.originalStartTime.isSame(date, "day"),
+          );
           if (changedEvent) {
             props = {
               name: changedEvent.name,
@@ -304,10 +359,12 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
               description: changedEvent.description,
               location: changedEvent.location,
               calendarName: event.calendarName,
-              color: event.color
-            }
+              color: event.color,
+            };
           } else {
-            let eventStart = DateTime.fromMillis(date.getTime(), {zone: 'utc'}); //since rrule works with utc times
+            let eventStart = DateTime.fromMillis(date.getTime(), {
+              zone: "utc",
+            }); //since rrule works with utc times
             let eventEnd = eventStart.plus(duration);
             props = {
               name: event.name,
@@ -316,7 +373,7 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
               description: event.description,
               location: event.location,
               calendarName: event.calendarName,
-              color: event.color
+              color: event.color,
             };
           }
           eventsToRender.push(props);
@@ -324,8 +381,11 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
       } else {
         //render event
         //check if event is in range
-        if ((event.startTime.month != this.state.current.month || event.startTime.year != this.state.current.year) &&
-        event.endTime.month != this.state.current.month || event.endTime.year != this.state.current.year
+        if (
+          ((event.startTime.month != this.state.current.month ||
+            event.startTime.year != this.state.current.year) &&
+            event.endTime.month != this.state.current.month) ||
+          event.endTime.year != this.state.current.year
         ) {
           return;
         }
@@ -339,36 +399,49 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
       } else {
         return b.endTime.diff(a.endTime).milliseconds;
       }
-    })
+    });
 
     eventsToRender.forEach((event) => {
       this.drawMultiEvent(eventsEachDay, event);
     });
 
     let eventProps = {
-      tooltipStyles: _.get(this.props.styles, 'tooltip', {}), //gets this.props.styles.tooltip if exists, else empty object
-      eventStyles: _.get(this.props.styles, 'event', {}),
-      eventCircleStyles: _.get(this.props.styles, 'eventCircle', {}),
-      eventTextStyles: _.get(this.props.styles, 'eventText', {}),
-    }
+      tooltipStyles: _.get(this.props.styles, "tooltip", {}), //gets this.props.styles.tooltip if exists, else empty object
+      eventStyles: _.get(this.props.styles, "event", {}),
+      eventCircleStyles: _.get(this.props.styles, "eventCircle", {}),
+      eventTextStyles: _.get(this.props.styles, "eventText", {}),
+    };
 
     let singleEventsToRender: EventProps[] = [];
     singleEvents.forEach((event) => {
       if (event.recurrence) {
-        let duration = to_datetime(event.endTime).diff(to_datetime(event.startTime));
-        
+        let duration = to_datetime(event.endTime).diff(
+          to_datetime(event.startTime),
+        );
+
         //get recurrences using RRule
-        let dates = Calendar.getDatesFromRRule(event.recurrence[0], event.startTime, to_datetime(this.state.current), to_datetime(this.state.current).plus({ month: 1 }));
+        let dates = Calendar.getDatesFromRRule(
+          event.recurrence[0],
+          event.startTime,
+          to_datetime(this.state.current),
+          to_datetime(this.state.current).plus({ month: 1 }),
+        );
 
         //render recurrences
         dates.forEach((date) => {
           //check if it is in cancelled
-          if (event.cancelledEvents.some((cancelledMoment: any) => (cancelledMoment.isSame(date, "day")))) {
+          if (
+            event.cancelledEvents.some((cancelledMoment: any) =>
+              cancelledMoment.isSame(date, "day"),
+            )
+          ) {
             return;
           }
 
           //if event has changed
-          const changedEvent = event.changedEvents.find((changedEvent: any) => (changedEvent.originalStartTime.isSame(date, "day")));
+          const changedEvent = event.changedEvents.find((changedEvent: any) =>
+            changedEvent.originalStartTime.isSame(date, "day"),
+          );
           let props: EventProps;
           if (changedEvent) {
             props = {
@@ -378,10 +451,12 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
               description: changedEvent.description,
               location: changedEvent.location,
               calendarName: event.calendarName,
-              color: event.color
-            }
+              color: event.color,
+            };
           } else {
-            let eventStart = DateTime.fromMillis(date.getTime(), {zone: 'utc'}); //avoid bad timezone conversions
+            let eventStart = DateTime.fromMillis(date.getTime(), {
+              zone: "utc",
+            }); //avoid bad timezone conversions
             let eventEnd = eventStart.plus(duration);
             props = {
               name: event.name,
@@ -390,24 +465,32 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
               description: event.description,
               location: event.location,
               calendarName: event.calendarName,
-              color: event.color
+              color: event.color,
             };
           }
-          
+
           singleEventsToRender.push(props);
         });
       } else {
         //check if event is in current month
-        if (event.startTime.month != this.state.current.month || event.startTime.year != this.state.current.year) {
+        if (
+          event.startTime.month != this.state.current.month ||
+          event.startTime.year != this.state.current.year
+        ) {
           return;
         }
 
         singleEventsToRender.push(event);
       }
     });
-    singleEventsToRender = singleEventsToRender.sort((a, b) => (a.startTime.diff(b.startTime).milliseconds));
+    singleEventsToRender = singleEventsToRender.sort(
+      (a, b) => a.startTime.diff(b.startTime).milliseconds,
+    );
     singleEventsToRender.forEach((event) => {
-      this.renderSingleEvent(eventsEachDay, to_datetime(event.startTime).day, {...event, ...eventProps});
+      this.renderSingleEvent(eventsEachDay, to_datetime(event.startTime).day, {
+        ...event,
+        ...eventProps,
+      });
     });
 
     return eventsEachDay;
@@ -425,59 +508,102 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
     let arrowRight = false;
 
     if (props.endTime.hasSame(props.endTime.startOf("day"), "second")) {
-      endDate = props.endTime.setZone('utc', {keepLocalTime: true}).minus({day: 1});
+      endDate = props.endTime
+        .setZone("utc", { keepLocalTime: true })
+        .minus({ day: 1 });
     } else {
-      endDate = to_datetime(props.endTime).setZone('utc', {keepLocalTime: true});
+      endDate = to_datetime(props.endTime).setZone("utc", {
+        keepLocalTime: true,
+      });
     }
 
-    if (to_datetime(props.startTime).setZone('utc', {keepLocalTime: true}) < this.state.current) {
+    if (
+      to_datetime(props.startTime).setZone("utc", { keepLocalTime: true }) <
+      this.state.current
+    ) {
       if (this.state.showArrow) {
         arrowLeft = true;
       }
-      
+
       startDrawDate = 1;
       curDate = this.state.current;
     } else {
       startDrawDate = props.startTime.day;
-      curDate = to_datetime(props.startTime).setZone('utc', {keepLocalTime: true});
+      curDate = to_datetime(props.startTime).setZone("utc", {
+        keepLocalTime: true,
+      });
     }
 
-    while (curDate.startOf('day') <= endDate.startOf('day') ) {
-      if (curDate.day == this.state.current.daysInMonth && !endDate.hasSame(this.state.current, 'month')) {
+    while (curDate.startOf("day") <= endDate.startOf("day")) {
+      if (
+        curDate.day == this.state.current.daysInMonth &&
+        !endDate.hasSame(this.state.current, "month")
+      ) {
         if (this.state.showArrow) {
           arrowRight = true;
         }
-        
+
         //draw then quit
-        this.renderMultiEventBlock(eventsEachDay, startDrawDate, blockLength, props, arrowLeft, arrowRight);
+        this.renderMultiEventBlock(
+          eventsEachDay,
+          startDrawDate,
+          blockLength,
+          props,
+          arrowLeft,
+          arrowRight,
+        );
         break;
       }
-      if (curDate.day == this.state.current.daysInMonth || curDate.hasSame(endDate, "day")) {
+      if (
+        curDate.day == this.state.current.daysInMonth ||
+        curDate.hasSame(endDate, "day")
+      ) {
         //draw then quit
-        this.renderMultiEventBlock(eventsEachDay, startDrawDate, blockLength, props, arrowLeft, arrowRight);
+        this.renderMultiEventBlock(
+          eventsEachDay,
+          startDrawDate,
+          blockLength,
+          props,
+          arrowLeft,
+          arrowRight,
+        );
         break;
       }
       if (curDate.weekday == 6) {
         //draw then reset
-        this.renderMultiEventBlock(eventsEachDay, startDrawDate, blockLength, props, arrowLeft, arrowRight);
-        startDrawDate = curDate.plus({day: 1}).day;
+        this.renderMultiEventBlock(
+          eventsEachDay,
+          startDrawDate,
+          blockLength,
+          props,
+          arrowLeft,
+          arrowRight,
+        );
+        startDrawDate = curDate.plus({ day: 1 }).day;
         blockLength = 0;
         arrowLeft = false;
         arrowRight = false;
       }
 
       blockLength++;
-      curDate = curDate.plus({day: 1});
+      curDate = curDate.plus({ day: 1 });
     }
   }
 
   //TODO: refactor this too?
-  //handles rendering and proper stacking of individual blocks 
-  renderMultiEventBlock(eventsEachDay: any[], startDate: any, length: number, props: any, arrowLeft: boolean, arrowRight: boolean) { 
+  //handles rendering and proper stacking of individual blocks
+  renderMultiEventBlock(
+    eventsEachDay: any[],
+    startDate: any,
+    length: number,
+    props: any,
+    arrowLeft: boolean,
+    arrowRight: boolean,
+  ) {
     let multiEventProps = {
-      tooltipStyles: _.get(this.props.styles, 'tooltip', {}), //gets this.props.styles.tooltip if exists, else empty object
-      multiEventStyles: _.get(this.props.styles, 'multiEvent', {}),
-    }
+      tooltipStyles: _.get(this.props.styles, "tooltip", {}), //gets this.props.styles.tooltip if exists, else empty object
+      multiEventStyles: _.get(this.props.styles, "multiEvent", {}),
+    };
 
     let maxBlocks = 0;
     let closedSlots: any[] = []; //keep track of rows that the event can't be inserted into
@@ -494,7 +620,7 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
           break;
         } else if (closedSlots.includes(j)) {
           continue;
-        } 
+        }
         if (dayEvents[j].props.className.includes("isEvent")) {
           closedSlots.push(j);
         }
@@ -513,15 +639,33 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
     for (let i = 0; i < length; i++) {
       //placeholders
       while (eventsEachDay[startDate - 1 + i].length <= chosenRow) {
-        eventsEachDay[startDate - 1 + i].push(<div className="event below placeholder" key={`placeholder-${gud()}`}></div>);
+        eventsEachDay[startDate - 1 + i].push(
+          <div
+            className="event below placeholder"
+            key={`placeholder-${gud()}`}
+          ></div>,
+        );
       }
 
       //rest of event that is under the main banner
-      eventsEachDay[startDate - 1 + i][chosenRow] = <div className="isEvent event below" key={`filler-${gud()}`}></div>;
+      eventsEachDay[startDate - 1 + i][chosenRow] = (
+        <div className="isEvent event below" key={`filler-${gud()}`}></div>
+      );
     }
-  
+
     //render event
-    eventsEachDay[startDate - 1][chosenRow] = <div className="isEvent" key={`multi-event-${chosenRow}`}><MultiEvent {...props} {...multiEventProps} length={length} arrowLeft={arrowLeft} arrowRight={arrowRight} key={`multi-event-${gud()}`}/></div>;
+    eventsEachDay[startDate - 1][chosenRow] = (
+      <div className="isEvent" key={`multi-event-${chosenRow}`}>
+        <MultiEvent
+          {...props}
+          {...multiEventProps}
+          length={length}
+          arrowLeft={arrowLeft}
+          arrowRight={arrowRight}
+          key={`multi-event-${gud()}`}
+        />
+      </div>
+    );
   }
 
   //attempts to render in a placeholder then at the end
@@ -529,23 +673,40 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
     let foundEmpty = false;
     let nodes = eventsEachDay[date - 1];
     for (let i = 0; i < nodes.length; i++) {
-      if (nodes[i].props.className.includes("event") && !nodes[i].props.className.includes("isEvent")) { //target only placeholders
-        nodes[i] = <div className="isEvent" key={`single-event-${gud()}`}><Event {...event} key={`single-event-${gud()}`}/></div>;
+      if (
+        nodes[i].props.className.includes("event") &&
+        !nodes[i].props.className.includes("isEvent")
+      ) {
+        //target only placeholders
+        nodes[i] = (
+          <div className="isEvent" key={`single-event-${gud()}`}>
+            <Event {...event} key={`single-event-${gud()}`} />
+          </div>
+        );
         foundEmpty = true;
         break;
       }
     }
     if (!foundEmpty) {
-      eventsEachDay[date - 1].push(<div className="isEvent" key={`single-event-${gud()}`}><Event {...event} key={`single-event-${gud()}`}/></div>)
+      eventsEachDay[date - 1].push(
+        <div className="isEvent" key={`single-event-${gud()}`}>
+          <Event {...event} key={`single-event-${gud()}`} />
+        </div>,
+      );
     }
   }
 
   //get dates based on rrule string between dates
-  static getDatesFromRRule(str: string, eventStart: DateTime, betweenStart: DateTime, betweenEnd: DateTime) {    
+  static getDatesFromRRule(
+    str: string,
+    eventStart: DateTime,
+    betweenStart: DateTime,
+    betweenEnd: DateTime,
+  ) {
     //get recurrences using RRule
-    let rstr = `DTSTART:${eventStart.setZone('utc', {keepLocalTime: true}).toFormat("yyyyMMdd'T'HHmmss")}Z\n${str}`;
-    let rruleSet = rrulestr(rstr, {forceset: true});
-    
+    let rstr = `DTSTART:${eventStart.setZone("utc", { keepLocalTime: true }).toFormat("yyyyMMdd'T'HHmmss")}Z\n${str}`;
+    let rruleSet = rrulestr(rstr, { forceset: true });
+
     //get dates
     let begin = betweenStart.toUTC().toJSDate();
     let end = betweenEnd.toUTC().toJSDate();
@@ -554,18 +715,24 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
   }
 
   render() {
-    let eventsEachDay = this.getRenderEvents(this.state.events, this.state.singleEvents);
+    let eventsEachDay = this.getRenderEvents(
+      this.state.events,
+      this.state.singleEvents,
+    );
     return (
       <div
         className="calendar"
-        css={[{
-          fontSize: "18px",
-          border: "1px solid",
-          minWidth: "300px",
-          position: "relative",
-          borderColor: "LightGray",
-          color: "#51565d",
-        }, _.get(this.props.styles, 'calendar', {})]}
+        css={[
+          {
+            fontSize: "18px",
+            border: "1px solid",
+            minWidth: "300px",
+            position: "relative",
+            borderColor: "LightGray",
+            color: "#51565d",
+          },
+          _.get(this.props.styles, "calendar", {}),
+        ]}
       >
         <div className="calendar-header">
           <div
@@ -576,7 +743,9 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
           </div>
           <div>
             <h2 className="calendar-title">
-              {this.state.monthNames[this.state.current.month-1] + " " + this.state.current.year}
+              {this.state.monthNames[this.state.current.month - 1] +
+                " " +
+                this.state.current.year}
             </h2>
           </div>
           <div
@@ -590,34 +759,44 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
           {this.renderDays()}
           {this.renderDates(eventsEachDay)}
         </div>
-        { this.state.showFooter && 
+        {this.state.showFooter && (
           <div className="calendar-footer">
-            <div css={css`
-              font-size: 14px;
-              padding-left: 5px;
-              text-align: left;
-            `}>
+            <div
+              css={css`
+                font-size: 14px;
+                padding-left: 5px;
+                text-align: left;
+              `}
+            >
               All times shown your timezone ({this.state.userTimezone.name})
             </div>
-            <div css={css`
-              vertical-align: top;
-              margin-left: 3px;
-              margin-right: 3px;
-            `}>
-              <a href={"https://calendar.google.com/calendar/r?cid=" + this.props.calendars[0].calendarId} target="_blank" css={css`
-                font-size: 14px;
-                text-decoration: none;
-                color: inherit;
-                &:hover {
-                  text-decoration: underline;
+            <div
+              css={css`
+                vertical-align: top;
+                margin-left: 3px;
+                margin-right: 3px;
+              `}
+            >
+              <a
+                href={
+                  "https://calendar.google.com/calendar/r?cid=" +
+                  this.props.calendars[0].calendarId
                 }
-              `}>
+                target="_blank"
+                css={css`
+                  font-size: 14px;
+                  text-decoration: none;
+                  color: inherit;
+                  &:hover {
+                    text-decoration: underline;
+                  }
+                `}
+              >
                 &#43; Add Calendar
               </a>
             </div>
           </div>
-        }
-        
+        )}
       </div>
     );
   }

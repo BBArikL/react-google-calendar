@@ -2,11 +2,10 @@
  * @jest-environment jsdom
  */
 
-import { describe, test, expect, beforeEach, afterEach } from "vitest"; 
-
+import { act } from "@testing-library/react";
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { act } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 import Calendar from "../src/index";
 
@@ -39,7 +38,7 @@ describe("check if invalid language affects component", () => {
           apiKey={process.env.GOOGLE_API_KEY}
           language={"ZZ"}
           calendars={calendars}
-        />
+        />,
       );
     });
 
@@ -54,7 +53,6 @@ describe("check if invalid language affects component", () => {
 
 describe("check if the language change affects the component", () => {
   test("test valid language", () => {
-
     const calendars = [
       { calendarId: "09opmkrjova8h5k5k46fedmo88@group.calendar.google.com" },
     ];
@@ -66,7 +64,7 @@ describe("check if the language change affects the component", () => {
           apiKey={process.env.GOOGLE_API_KEY}
           language={"FR"}
           calendars={calendars}
-        />
+        />,
       );
     });
 

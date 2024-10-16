@@ -11,20 +11,19 @@ export function loadCalendarAPI(apiKey: string): Promise<any> {
     document.body.appendChild(script);
     script.onload = () => {
       gapi.load("client", () => {
-        gapi.client.init({ apiKey: apiKey })
-          .then(() => {
-            gapi.client
-              .load(
-                "https://content.googleapis.com/discovery/v1/apis/calendar/v3/rest"
-              )
-              .then(
-                () => resolve("GAPI client successfully loaded for API"),
-                (err: any) => reject(err)
-              );
-          });
+        gapi.client.init({ apiKey: apiKey }).then(() => {
+          gapi.client
+            .load(
+              "https://content.googleapis.com/discovery/v1/apis/calendar/v3/rest",
+            )
+            .then(
+              () => resolve("GAPI client successfully loaded for API"),
+              (err: any) => reject(err),
+            );
+        });
       });
-    }
-  })
+    };
+  });
 }
 
 /** query calendar API for events
@@ -32,7 +31,10 @@ export function loadCalendarAPI(apiKey: string): Promise<any> {
  * @param {number} [maxResults=1000] maximum number of events returned, can be up to 2500, currently doesn't support more events
  * @returns {Object} see https://developers.google.com/calendar/v3/reference/events/list for shape of response object
  */
-export function getEventsList(calendarId: string, maxResults = 1000): Promise<any> {
+export function getEventsList(
+  calendarId: string,
+  maxResults = 1000,
+): Promise<any> {
   return gapi.client.calendar.events.list({
     calendarId: calendarId,
     maxResults: maxResults,

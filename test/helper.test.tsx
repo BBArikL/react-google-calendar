@@ -1,8 +1,12 @@
-import { describe, test, expect } from "vitest";
-
-import { isAllDay, getCalendarURL, isMultiEvent, pSBC } from "../src/utils/helper";
 import { DateTime } from "luxon";
+import { describe, expect, test } from "vitest";
 
+import {
+  getCalendarURL,
+  isAllDay,
+  isMultiEvent,
+  pSBC,
+} from "../src/utils/helper";
 
 describe("isAllDay function", () => {
   test("single day all day event", () => {
@@ -45,10 +49,18 @@ describe("getCalendarURL function", () => {
       description: "Some Description",
       location: "A Location",
       allDay: true,
-    }
-    const outputURL = getCalendarURL(props.startTime, props.endTime, props.name, props.description, props.location, props.allDay);
+    };
+    const outputURL = getCalendarURL(
+      props.startTime,
+      props.endTime,
+      props.name,
+      props.description,
+      props.location,
+      props.allDay,
+    );
 
-    const expectedURL = "https://calendar.google.com/calendar/r/eventedit?text=Event&dates=20200501%2F20200502&details=Some+Description&location=A+Location";
+    const expectedURL =
+      "https://calendar.google.com/calendar/r/eventedit?text=Event&dates=20200501%2F20200502&details=Some+Description&location=A+Location";
     expect(outputURL).toBe(expectedURL);
   });
 
@@ -60,10 +72,18 @@ describe("getCalendarURL function", () => {
       description: "Some Description",
       location: "A Location",
       allDay: false,
-    }
-    const outputURL = getCalendarURL(props.startTime, props.endTime, props.name, props.description, props.location, props.allDay);
+    };
+    const outputURL = getCalendarURL(
+      props.startTime,
+      props.endTime,
+      props.name,
+      props.description,
+      props.location,
+      props.allDay,
+    );
 
-    const expectedURL = "https://calendar.google.com/calendar/r/eventedit?text=Event&dates=20200502T163000%2F20200504T173000&details=Some+Description&location=A+Location";
+    const expectedURL =
+      "https://calendar.google.com/calendar/r/eventedit?text=Event&dates=20200502T163000%2F20200504T173000&details=Some+Description&location=A+Location";
     expect(outputURL).toBe(expectedURL);
   });
 
@@ -76,9 +96,16 @@ describe("getCalendarURL function", () => {
       location: "A Location",
     };
 
-    const outputURL = getCalendarURL(props.startTime, props.endTime, props.name, props.description, props.location);
+    const outputURL = getCalendarURL(
+      props.startTime,
+      props.endTime,
+      props.name,
+      props.description,
+      props.location,
+    );
 
-    const expectedURL = "https://calendar.google.com/calendar/r/eventedit?text=Event&dates=20200502T163000%2F20200502T173000&details=Some+Description&location=A+Location";
+    const expectedURL =
+      "https://calendar.google.com/calendar/r/eventedit?text=Event&dates=20200502T163000%2F20200502T173000&details=Some+Description&location=A+Location";
     expect(outputURL).toBe(expectedURL);
   });
 
@@ -90,10 +117,17 @@ describe("getCalendarURL function", () => {
       location: "A Location",
     };
 
-    //@ts-ignore
-    const outputURL = getCalendarURL(props.startTime, props.endTime, props.name, props.description, props.location);
+    const outputURL = getCalendarURL(
+      props.startTime,
+      props.endTime,
+      props.name,
+      //@ts-ignore
+      props.description,
+      props.location,
+    );
 
-    const expectedURL = "https://calendar.google.com/calendar/r/eventedit?text=Event&dates=20200502T163000%2F20200502T173000&details=&location=A+Location";
+    const expectedURL =
+      "https://calendar.google.com/calendar/r/eventedit?text=Event&dates=20200502T163000%2F20200502T173000&details=&location=A+Location";
     expect(outputURL).toBe(expectedURL);
   });
 
@@ -105,10 +139,17 @@ describe("getCalendarURL function", () => {
       name: "Event",
     };
 
-    //@ts-ignore
-    const outputURL = getCalendarURL(props.startTime, props.endTime, props.name, props.description, props.location);
+    const outputURL = getCalendarURL(
+      props.startTime,
+      props.endTime,
+      props.name,
+      props.description,
+      //@ts-ignore
+      props.location,
+    );
 
-    const expectedURL = "https://calendar.google.com/calendar/r/eventedit?text=Event&dates=20200502T163000%2F20200502T173000&details=Some+Description&location=";
+    const expectedURL =
+      "https://calendar.google.com/calendar/r/eventedit?text=Event&dates=20200502T163000%2F20200502T173000&details=Some+Description&location=";
     expect(outputURL).toBe(expectedURL);
   });
 });
@@ -152,10 +193,10 @@ describe("isMultiEvent function", () => {
 
 describe("pSBC function", () => {
   test("hex code", () => {
-    expect(pSBC(-0.35, '#4786ff')).toEqual('#396cce');
+    expect(pSBC(-0.35, "#4786ff")).toEqual("#396cce");
   });
 
   test("rgb", () => {
-    expect(pSBC(-0.35, 'rgb(63, 191, 63)')).toEqual('rgb(51,154,51)');
+    expect(pSBC(-0.35, "rgb(63, 191, 63)")).toEqual("rgb(51,154,51)");
   });
 });

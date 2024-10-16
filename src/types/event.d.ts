@@ -1,6 +1,6 @@
-import { CSSProperties } from 'react';
-import { CSSObject } from '@emotion/react';
-import { DateTime } from 'luxon';
+import { CSSObject } from "@emotion/react";
+import { DateTime } from "luxon";
+import { CSSProperties } from "react";
 
 export interface EventProps {
   name: string;
