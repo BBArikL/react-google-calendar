@@ -8,14 +8,14 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { act } from "@testing-library/react";
 
-import moment from "moment-timezone";
+import { DateTime } from 'luxon';
 
 import Tooltip from "../src/tooltip";
 
 describe("Tooltip Time Display", () => {
   test("one day event", () => {
-    let startTime = moment.utc("2020-04-20T04:30:00+00:00");
-    let endTime = moment.utc("2020-04-20T15:30:00+00:00");
+    let startTime = DateTime.fromISO("2020-04-20T04:30:00+00:00").toUTC();
+    let endTime = DateTime.fromISO("2020-04-20T15:30:00+00:00").toUTC();
 
     let output = Tooltip.getTimeDisplay(startTime, endTime, false);
     let expected = "Monday, April 20th\n4:30am - 3:30pm";
@@ -25,8 +25,8 @@ describe("Tooltip Time Display", () => {
 
   
   test("one day all day event",() => {
-    let startTime = moment.utc("2020-04-20").startOf("day");
-    let endTime = moment.utc("2020-04-21").startOf("day");
+    let startTime = DateTime.fromISO("2020-04-20").startOf("day");
+    let endTime = DateTime.fromISO("2020-04-21").startOf("day");
 
     let output = Tooltip.getTimeDisplay(startTime, endTime, true);
     let expected = "Monday, April 20th";
@@ -35,8 +35,8 @@ describe("Tooltip Time Display", () => {
   });
 
   test("multiple day all day event",() => {
-    let startTime = moment.utc("2020-03-20").startOf("day");
-    let endTime = moment.utc("2020-03-25").startOf("day");
+    let startTime = DateTime.fromISO("2020-03-20").startOf("day");
+    let endTime = DateTime.fromISO("2020-03-25").startOf("day");
     
     let output = Tooltip.getTimeDisplay(startTime, endTime, true);
     let expected = "Mar 20th, 2020 - Mar 24th, 2020";
@@ -45,8 +45,8 @@ describe("Tooltip Time Display", () => {
   });
 
   test("multiple day event",() => {
-    let startTime = moment.utc("2020-03-20T04:30:00+00:00");
-    let endTime = moment.utc("2020-03-25T15:30:00+00:00");
+    let startTime = DateTime.fromISO("2020-03-20T04:30:00+00:00").toUTC();
+    let endTime = DateTime.fromISO("2020-03-25T15:30:00+00:00").toUTC();
     
     let output = Tooltip.getTimeDisplay(startTime, endTime, false);
     let expected = "Mar 20th, 2020, 4:30am -\nMar 25th, 2020, 3:30pm";
@@ -74,8 +74,8 @@ describe("Tooltip Rendering", () => {
   test("correct event name",() => {
     let props = {
       name: "Test Event",
-      startTime: moment(),
-      endTime: moment(),
+      startTime: DateTime.now(),
+      endTime: DateTime.now(),
     };
     act(() => {
       // @ts-ignore
@@ -88,8 +88,8 @@ describe("Tooltip Rendering", () => {
   test("correctly has no description",() => {
     let props = {
       name: "Test Event",
-      startTime: moment(),
-      endTime: moment(),
+      startTime: DateTime.now(),
+      endTime: DateTime.now(),
     };
     act(() => {
       // @ts-ignore
@@ -102,8 +102,8 @@ describe("Tooltip Rendering", () => {
   test("correct description",() => {
     let props = {
       name: "Test Event",
-      startTime: moment(),
-      endTime: moment(),
+      startTime: DateTime.now(),
+      endTime: DateTime.now(),
       description: "some description",
     };
     act(() => {
@@ -117,8 +117,8 @@ describe("Tooltip Rendering", () => {
   test("correctly has no location",() => {
     let props = {
       name: "Test Event",
-      startTime: moment(),
-      endTime: moment(),
+      startTime: DateTime.now(),
+      endTime: DateTime.now(),
     };
     act(() => {
       // @ts-ignore
@@ -131,8 +131,8 @@ describe("Tooltip Rendering", () => {
   test("correct location",() => {
     let props = {
       name: "Test Event",
-      startTime: moment(),
-      endTime: moment(),
+      startTime: DateTime.now(),
+      endTime: DateTime.now(),
       location: "A location",
     };
     act(() => {
@@ -146,8 +146,8 @@ describe("Tooltip Rendering", () => {
   test("correctly has no calendarName",() => {
     let props = {
       name: "Test Event",
-      startTime: moment(),
-      endTime: moment(),
+      startTime: DateTime.now(),
+      endTime: DateTime.now(),
     };
     act(() => {
       // @ts-ignore
@@ -160,8 +160,8 @@ describe("Tooltip Rendering", () => {
   test("correct calendarName",() => {
     let props = {
       name: "Test Event",
-      startTime: moment(),
-      endTime: moment(),
+      startTime: DateTime.now(),
+      endTime: DateTime.now(),
       calendarName: "Calendar",
     };
     act(() => {

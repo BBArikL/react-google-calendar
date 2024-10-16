@@ -2,11 +2,11 @@
 
 import React from "react";
 
-import moment from "moment-timezone";
+import { DateTime } from 'luxon';
 
 import "./index.css";
 
-import { css, jsx } from '@emotion/react'
+import { css } from '@emotion/react'
 
 import FiberManualRecordIcon from "./svg/fiberManualRecord";
 
@@ -15,14 +15,15 @@ import Tooltip from "./tooltip";
 import { Manager, Reference } from 'react-popper';
 
 import { EventProps, EventState } from './types/event';
+import { to_datetime } from "./utils/helper";
 
 export default class Event extends React.Component<EventProps, EventState> {
   constructor(props: EventProps) {
     super(props);
 
     this.state = {      
-      startTime: moment(this.props.startTime),
-      endTime: moment(this.props.endTime),
+      startTime: this.props.startTime,
+      endTime: this.props.endTime,
       showTooltip: false,
     }
 
@@ -99,7 +100,7 @@ export default class Event extends React.Component<EventProps, EventState> {
                       display: none;
                     }
                   `}>
-                    { this.state.startTime.format("h:mma ") }
+                    { this.state.startTime.toFormat("h:mma ") }
                   </span>
                   <span css={{fontWeight: "500"}}>
                     {this.props.name}
@@ -110,8 +111,8 @@ export default class Event extends React.Component<EventProps, EventState> {
           </Reference>
           <Tooltip
             name={this.props.name}
-            startTime={moment(this.props.startTime)}
-            endTime={moment(this.props.endTime)}
+            startTime={to_datetime(this.props.startTime)}
+            endTime={to_datetime(this.props.endTime)}
             description={this.props.description}
             location={this.props.location}
             tooltipStyles={this.props.tooltipStyles}

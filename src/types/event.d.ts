@@ -1,11 +1,11 @@
 import { CSSProperties } from 'react';
 import { CSSObject } from '@emotion/react';
-import { Moment } from 'moment-timezone';
+import { DateTime } from 'luxon';
 
 export interface EventProps {
   name: string;
-  startTime: string | number | Date | Moment;
-  endTime: string | number | Date | Moment;
+  startTime: DateTime;
+  endTime: DateTime;
   description?: string;
   location?: string;
   eventStyles?: CSSProperties | CSSObject;
@@ -17,7 +17,7 @@ export interface EventProps {
 }
 
 export interface EventState {
-  startTime: Moment;
-  endTime: Moment;
+  startTime: DateTime;
+  endTime: DateTime;
   showTooltip: boolean;
 }

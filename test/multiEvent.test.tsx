@@ -8,10 +8,8 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { act } from "@testing-library/react";
 
-
-import moment from "moment-timezone";
-
 import MultiEvent from "../src/multiEvent";
+import { DateTime } from "luxon";
 
 let basicProps = {
   borderColor: "black",
@@ -39,8 +37,8 @@ describe("Multi Event Component", () => {
   test("opens and closes properly on click",() => {
     let props = {
       name: "Test Event",
-      startTime: moment(),
-      endTime: moment(),
+      startTime: DateTime.now(),
+      endTime: DateTime.now(),
     };
 
     act(() => {

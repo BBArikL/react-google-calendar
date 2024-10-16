@@ -1,37 +1,37 @@
 import { describe, test, expect } from "vitest";
 
 import { isAllDay, getCalendarURL, isMultiEvent, pSBC } from "../src/utils/helper";
-import moment from "moment-timezone";
+import { DateTime } from "luxon";
 
 
 describe("isAllDay function", () => {
   test("single day all day event", () => {
-    let startTime = moment.parseZone("2020-06-09");
-    let endTime = moment.parseZone("2020-06-10");
+    let startTime = DateTime.fromISO("2020-06-09");
+    let endTime = DateTime.fromISO("2020-06-10");
     expect(isAllDay(startTime, endTime)).toBe(true);
   });
 
   test("multiple day all day event", () => {
-    let startTime = moment.parseZone("2020-06-09");
-    let endTime = moment.parseZone("2020-06-25");
+    let startTime = DateTime.fromISO("2020-06-09");
+    let endTime = DateTime.fromISO("2020-06-25");
     expect(isAllDay(startTime, endTime)).toBe(true);
   });
 
   test("not all day event", () => {
-    let startTime = moment.parseZone("2020-06-09");
-    let endTime = moment.parseZone("2020-06-25 05:30");
+    let startTime = DateTime.fromISO("2020-06-09");
+    let endTime = DateTime.fromISO("2020-06-25 05:30");
     expect(isAllDay(startTime, endTime)).toBe(false);
   });
 
   test("not all day event", () => {
-    let startTime = moment.parseZone("2020-06-09 05:30");
-    let endTime = moment.parseZone("2020-06-25");
+    let startTime = DateTime.fromISO("2020-06-09 05:30");
+    let endTime = DateTime.fromISO("2020-06-25");
     expect(isAllDay(startTime, endTime)).toBe(false);
   });
 
   test("not all day event", () => {
-    let startTime = moment.parseZone("2020-06-09 05:30");
-    let endTime = moment.parseZone("2020-06-25 05:30");
+    let startTime = DateTime.fromISO("2020-06-09 05:30");
+    let endTime = DateTime.fromISO("2020-06-25 05:30");
     expect(isAllDay(startTime, endTime)).toBe(false);
   });
 });
@@ -39,8 +39,8 @@ describe("isAllDay function", () => {
 describe("getCalendarURL function", () => {
   test("correct all day event url", () => {
     const props = {
-      startTime: moment.parseZone("2020-05-01"),
-      endTime: moment.parseZone("2020-05-02"),
+      startTime: DateTime.fromISO("2020-05-01"),
+      endTime: DateTime.fromISO("2020-05-02"),
       name: "Event",
       description: "Some Description",
       location: "A Location",
@@ -54,8 +54,8 @@ describe("getCalendarURL function", () => {
 
   test("correct multi day non all day event url", () => {
     const props = {
-      startTime: moment.parseZone("2020-05-02 16:30"),
-      endTime: moment.parseZone("2020-05-04 17:30"),
+      startTime: DateTime.fromFormat("2020-05-02 16:30", "yyyy-MM-dd HH:mm"),
+      endTime: DateTime.fromFormat("2020-05-04 17:30", "yyyy-MM-dd HH:mm"),
       name: "Event",
       description: "Some Description",
       location: "A Location",
@@ -69,8 +69,8 @@ describe("getCalendarURL function", () => {
 
   test("correct single day non all day event url", () => {
     const props = {
-      startTime: moment.parseZone("2020-05-02 16:30"),
-      endTime: moment.parseZone("2020-05-02 17:30"),
+      startTime: DateTime.fromFormat("2020-05-02 16:30", "yyyy-MM-dd HH:mm"),
+      endTime: DateTime.fromFormat("2020-05-02 17:30", "yyyy-MM-dd HH:mm"),
       name: "Event",
       description: "Some Description",
       location: "A Location",
@@ -84,8 +84,8 @@ describe("getCalendarURL function", () => {
 
   test("no description", () => {
     const props = {
-      startTime: moment.parseZone("2020-05-02 16:30"),
-      endTime: moment.parseZone("2020-05-02 17:30"),
+      startTime: DateTime.fromFormat("2020-05-02 16:30", "yyyy-MM-dd HH:mm"),
+      endTime: DateTime.fromFormat("2020-05-02 17:30", "yyyy-MM-dd HH:mm"),
       name: "Event",
       location: "A Location",
     };
@@ -99,8 +99,8 @@ describe("getCalendarURL function", () => {
 
   test("no location", () => {
     const props = {
-      startTime: moment.parseZone("2020-05-02 16:30"),
-      endTime: moment.parseZone("2020-05-02 17:30"),
+      startTime: DateTime.fromFormat("2020-05-02 16:30", "yyyy-MM-dd HH:mm"),
+      endTime: DateTime.fromFormat("2020-05-02 17:30", "yyyy-MM-dd HH:mm"),
       description: "Some Description",
       name: "Event",
     };
@@ -115,36 +115,36 @@ describe("getCalendarURL function", () => {
 
 describe("isMultiEvent function", () => {
   test("same day less than 24 hrs", () => {
-    let startTime = moment.parseZone("2020-06-01 04:30");
-    let endTime = moment.parseZone("2020-06-01 15:30");
+    let startTime = DateTime.fromFormat("2020-06-01 04:30", "yyyy-MM-dd HH:mm");
+    let endTime = DateTime.fromFormat("2020-06-01 15:30", "yyyy-MM-dd HH:mm");
 
     expect(isMultiEvent(startTime, endTime)).toBe(false);
   });
 
   test("multi day but short event", () => {
-    let startTime = moment.parseZone("2020-06-01 15:30");
-    let endTime = moment.parseZone("2020-06-02 04:30");
+    let startTime = DateTime.fromFormat("2020-06-01 15:30", "yyyy-MM-dd HH:mm");
+    let endTime = DateTime.fromFormat("2020-06-02 04:30", "yyyy-MM-dd HH:mm");
 
     expect(isMultiEvent(startTime, endTime)).toBe(false);
   });
 
   test("all day event", () => {
-    let startTime = moment.parseZone("2020-06-01");
-    let endTime = moment.parseZone("2020-06-02");
+    let startTime = DateTime.fromISO("2020-06-01");
+    let endTime = DateTime.fromISO("2020-06-02");
 
     expect(isMultiEvent(startTime, endTime)).toBe(true);
   });
 
   test("multi day event", () => {
-    let startTime = moment.parseZone("2020-06-01 04:30");
-    let endTime = moment.parseZone("2020-06-02 15:30");
+    let startTime = DateTime.fromFormat("2020-06-01 04:30", "yyyy-MM-dd HH:mm");
+    let endTime = DateTime.fromFormat("2020-06-02 15:30", "yyyy-MM-dd HH:mm");
 
     expect(isMultiEvent(startTime, endTime)).toBe(true);
   });
 
   test("multi day all day event", () => {
-    let startTime = moment.parseZone("2020-06-01");
-    let endTime = moment.parseZone("2020-06-05");
+    let startTime = DateTime.fromISO("2020-06-01");
+    let endTime = DateTime.fromISO("2020-06-05");
 
     expect(isMultiEvent(startTime, endTime)).toBe(true);
   });

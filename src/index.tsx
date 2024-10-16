@@ -1,8 +1,8 @@
 /** @jsxImportSource @emotion/react */
 import React from "react";
 
-import moment, { Moment } from "moment-timezone";
-import { RRule, RRuleSet, rrulestr } from "rrule";
+import { DateTime } from 'luxon';
+import { rrulestr } from "rrule";
 
 import { CalendarProps, CalendarState } from './types';
 
@@ -11,10 +11,10 @@ import "./index.css";
 import Event from "./event";
 import MultiEvent from "./multiEvent";
 
-import { isMultiEvent } from "./utils/helper";
+import { isMultiEvent, to_datetime } from "./utils/helper";
 import { loadCalendarAPI, getEventsList } from "./utils/googleCalendarAPI";
 
-import { css, jsx } from '@emotion/react'
+import { css } from '@emotion/react'
 
 import _ from "lodash";
 
@@ -22,6 +22,9 @@ import _ from "lodash";
 import gud from "gud";
 
 import { Languages, availableLanguages } from "./languages";
+import { EventProps } from "./types/event";
+import { MultiEventProps } from "./types/multiEvent";
+
 
 export default class Calendar extends React.Component<CalendarProps, CalendarState> {
   constructor(props: CalendarProps) {
@@ -29,12 +32,12 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
     this.state = {
       monthNames: [...Languages.EN.MONTHS],
       days: [...Languages.EN.DAYS],
-      today: moment(),
-      current: moment().startOf("month").utc(true), //current position on calendar (first day of month)
+      today: DateTime.now(),
+      current: DateTime.utc().startOf("month"), //current position on calendar (first day of month)
       calendars: [],
       events: [],//all day or multi day events
       singleEvents: [], //single day events
-      userTimezone: moment.tz.guess(),
+      userTimezone: DateTime.fromObject({}, { zone: "system" }).zone,
       showFooter: props.showFooter || true,
       showArrow: props.showArrow || true,
       processedCalendars: [],
@@ -106,7 +109,7 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
         if (event.status == "cancelled") { //cancelled events
           cancelled.push({
             recurringEventId: event.recurringEventId,
-            originalStartTime: event.originalStartTime.dateTime ? moment(event.originalStartTime.dateTime) : moment.parseZone(event.originalStartTime.date), 
+            originalStartTime: event.originalStartTime.dateTime ? DateTime.fromISO(event.originalStartTime.dateTime) : DateTime.fromISO(event.originalStartTime.date), 
           });
         } else if (event.status == "confirmed") { //changed events
           changed.push({
@@ -114,9 +117,9 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
             name: event.summary,
             description: event.description,
             location: event.location,
-            originalStartTime: event.originalStartTime.dateTime ? moment(event.originalStartTime.dateTime) : moment.parseZone(event.originalStartTime.date),
-            newStartTime: event.start.dateTime ? moment(event.start.dateTime) : moment.parseZone(event.start.date),
-            newEndTime: event.end.dateTime ? moment(event.end.dateTime) : moment.parseZone(event.end.date),
+            originalStartTime: event.originalStartTime.dateTime ? DateTime.fromISO(event.originalStartTime.dateTime) : DateTime.fromISO(event.originalStartTime.date),
+            newStartTime: event.start.dateTime ? DateTime.fromISO(event.start.dateTime) : DateTime.fromISO(event.start.date),
+            newEndTime: event.end.dateTime ? DateTime.fromISO(event.end.dateTime) : DateTime.fromISO(event.end.date),
           });
         } else {
           console.log("Not categorized: ", event);
@@ -125,8 +128,8 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
         let newEvent = {
           id: event.id,
           name: event.summary,
-          startTime: event.start.dateTime ? moment(event.start.dateTime) : moment.parseZone(event.start.date),
-          endTime: event.end.dateTime ? moment(event.end.dateTime) : moment.parseZone(event.end.date),
+          startTime: event.start.dateTime ? DateTime.fromISO(event.start.dateTime) : DateTime.fromISO(event.start.date),
+          endTime: event.end.dateTime ? DateTime.fromISO(event.end.dateTime) : DateTime.fromISO(event.end.date),
           description: event.description,
           location: event.location,
           recurrence: event.recurrence,
@@ -180,16 +183,17 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
 
   //sets current month to previous month
   lastMonth() {
-    this.setState({ current: this.state.current.subtract(1, "months") });
+    this.setState({ current: this.state.current.minus({month: 1}) });
   }
 
   //sets current month to following month
   nextMonth() {
-    this.setState({ current: this.state.current.add(1, "months") });
+    this.setState({ current: this.state.current.plus({month: 1}) });
   }
 
   clearEvents() {
-    for (let i = 1; i <= this.state.current.daysInMonth(); i++) {
+    let daysInMonth = this.state.current.daysInMonth ?? 30;
+    for (let i = 1; i <= daysInMonth; i++) {
       const node: any = document.getElementById("day-" + i);
       while (node.lastElementChild) {
         node.removeChild(node.lastElementChild);
@@ -212,12 +216,11 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
 
   //renders the blocks for the days of each month
   renderDates(eventsEachDay: any[]): any[] {
-    //@ts-ignore
-    var days = [...Array(this.state.current.daysInMonth() + 1).keys()].slice(1); // create array from 1 to number of days in month
-
-    var dayOfWeek = this.state.current.day(); //get day of week of first day in the month
-
-    var padDays = (((-this.state.current.daysInMonth() - this.state.current.day()) % 7) + 7) % 7; //number of days to fill out the last row    
+    let currentDaysInMonth = this.state.current.daysInMonth ?? 30;
+    // @ts-ignore
+    let days = [...Array(currentDaysInMonth + 1).keys()].slice(1); // create array from 1 to number of days in month
+    let dayOfWeek = this.state.current.weekday; //get day of week of first day in the month
+    let padDays = (((-currentDaysInMonth - this.state.current.weekday) % 7) + 7) % 7; //number of days to fill out the last row    
 
     return [
       [...Array(dayOfWeek)].map((x, i) => (
@@ -228,7 +231,7 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
         ></div>
       )),
       days.map(x => {
-        if (x == this.state.today.date() && this.state.current.isSame(this.state.today, "month")) {
+        if (x == this.state.today.toJSDate() && this.state.current.hasSame(this.state.today, "month")) {
           return (
             <div
               className="day"
@@ -276,12 +279,12 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
 
   //get array of arrays of length days in month containing the events in each day
   getRenderEvents(events: any[], singleEvents: any[]) {
-    let eventsEachDay = [...Array(this.state.current.daysInMonth())].map((e) => []); //create array of empty arrays of length daysInMonth
-    let eventsToRender: any[] = [];
+    let eventsEachDay = [...Array(this.state.current.daysInMonth ?? 30)].map((e) => []); //create array of empty arrays of length daysInMonth
+    let eventsToRender: EventProps[] = [];
     events.forEach((event) => {
       if (event.recurrence) {
-        let duration = moment.duration(event.endTime.diff(event.startTime));
-        let dates = Calendar.getDatesFromRRule(event.recurrence[0], event.startTime, moment(this.state.current).subtract(duration), moment(this.state.current).add(1, "month"));
+        let duration = to_datetime(event.endTime).diff(to_datetime(event.startTime));
+        let dates = Calendar.getDatesFromRRule(event.recurrence[0], event.startTime, this.state.current.minus(duration), this.state.current.plus({month: 1}));
 
         //render recurrences
         dates.forEach((date) => {
@@ -290,7 +293,7 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
             return;
           }
 
-          let props;
+          let props: EventProps;
           //update information if event has changed
           const changedEvent = event.changedEvents.find((changedEvent: any) => (changedEvent.originalStartTime.isSame(date, "day")));
           if (changedEvent) {
@@ -304,8 +307,8 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
               color: event.color
             }
           } else {
-            let eventStart = moment.utc(date); //since rrule works with utc times
-            let eventEnd = moment(eventStart).add(duration);
+            let eventStart = DateTime.fromMillis(date.getTime(), {zone: 'utc'}); //since rrule works with utc times
+            let eventEnd = eventStart.plus(duration);
             props = {
               name: event.name,
               startTime: eventStart,
@@ -321,8 +324,8 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
       } else {
         //render event
         //check if event is in range
-        if ((event.startTime.month() != this.state.current.month() || event.startTime.year() != this.state.current.year()) &&
-        event.endTime.month() != this.state.current.month() || event.endTime.year() != this.state.current.year()
+        if ((event.startTime.month != this.state.current.month || event.startTime.year != this.state.current.year) &&
+        event.endTime.month != this.state.current.month || event.endTime.year != this.state.current.year
         ) {
           return;
         }
@@ -331,10 +334,10 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
     });
 
     eventsToRender = eventsToRender.sort((a, b) => {
-      if (a.startTime.diff(b.startTime) != 0) {
-        return a.startTime.diff(b.startTime);
+      if (a.startTime.diff(b.startTime).milliseconds != 0) {
+        return a.startTime.diff(b.startTime).milliseconds;
       } else {
-        return b.endTime.diff(a.endTime);
+        return b.endTime.diff(a.endTime).milliseconds;
       }
     })
 
@@ -349,13 +352,13 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
       eventTextStyles: _.get(this.props.styles, 'eventText', {}),
     }
 
-    let singleEventsToRender: any[] = [];
+    let singleEventsToRender: EventProps[] = [];
     singleEvents.forEach((event) => {
       if (event.recurrence) {
-        let duration = moment.duration(event.endTime.diff(event.startTime));
+        let duration = to_datetime(event.endTime).diff(to_datetime(event.startTime));
         
         //get recurrences using RRule
-        let dates = Calendar.getDatesFromRRule(event.recurrence[0], event.startTime, moment(this.state.current), moment(this.state.current).add(1, "month"));
+        let dates = Calendar.getDatesFromRRule(event.recurrence[0], event.startTime, to_datetime(this.state.current), to_datetime(this.state.current).plus({ month: 1 }));
 
         //render recurrences
         dates.forEach((date) => {
@@ -366,7 +369,7 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
 
           //if event has changed
           const changedEvent = event.changedEvents.find((changedEvent: any) => (changedEvent.originalStartTime.isSame(date, "day")));
-          let props;
+          let props: EventProps;
           if (changedEvent) {
             props = {
               name: changedEvent.name,
@@ -378,8 +381,8 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
               color: event.color
             }
           } else {
-            let eventStart = moment.utc(date); //avoid bad timezone conversions
-            let eventEnd = moment(eventStart).add(duration);
+            let eventStart = DateTime.fromMillis(date.getTime(), {zone: 'utc'}); //avoid bad timezone conversions
+            let eventEnd = eventStart.plus(duration);
             props = {
               name: event.name,
               startTime: eventStart,
@@ -395,17 +398,16 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
         });
       } else {
         //check if event is in current month
-        if (event.startTime.month() != this.state.current.month() || event.startTime.year() != this.state.current.year()) {
+        if (event.startTime.month != this.state.current.month || event.startTime.year != this.state.current.year) {
           return;
         }
 
         singleEventsToRender.push(event);
       }
     });
-
-    singleEventsToRender = singleEventsToRender.sort((a, b) => (a.startTime.diff(b.startTime)));
+    singleEventsToRender = singleEventsToRender.sort((a, b) => (a.startTime.diff(b.startTime).milliseconds));
     singleEventsToRender.forEach((event) => {
-      this.renderSingleEvent(eventsEachDay, moment(event.startTime).date(), {...event, ...eventProps});
+      this.renderSingleEvent(eventsEachDay, to_datetime(event.startTime).day, {...event, ...eventProps});
     });
 
     return eventsEachDay;
@@ -413,35 +415,35 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
 
   //TODO: refactor
   //decides how to render events
-  drawMultiEvent(eventsEachDay: any[], props: any) { 
+  drawMultiEvent(eventsEachDay: any[], props: MultiEventProps) {
     let startDrawDate;
     let blockLength = 1;
-    let curDate;
-    let endDate;
+    let curDate: DateTime;
+    let endDate: DateTime;
 
     let arrowLeft = false;
     let arrowRight = false;
 
-    if (props.endTime.isSame(moment(props.endTime).startOf("day"), "second")) {
-      endDate = moment(props.endTime).utc(true).subtract(1, "day");
+    if (props.endTime.hasSame(props.endTime.startOf("day"), "second")) {
+      endDate = props.endTime.setZone('utc', {keepLocalTime: true}).minus({day: 1});
     } else {
-      endDate = moment(props.endTime).utc(true);
+      endDate = to_datetime(props.endTime).setZone('utc', {keepLocalTime: true});
     }
 
-    if (moment(props.startTime).utc(true).isBefore(this.state.current)) {
+    if (to_datetime(props.startTime).setZone('utc', {keepLocalTime: true}) < this.state.current) {
       if (this.state.showArrow) {
         arrowLeft = true;
       }
       
       startDrawDate = 1;
-      curDate = moment(this.state.current).utc(true);
+      curDate = this.state.current;
     } else {
-      startDrawDate = props.startTime.date();
-      curDate = moment(props.startTime).utc(true);
+      startDrawDate = props.startTime.day;
+      curDate = to_datetime(props.startTime).setZone('utc', {keepLocalTime: true});
     }
 
-    while (curDate.isSameOrBefore(endDate, "day")) {
-      if (curDate.date() == this.state.current.daysInMonth() && !endDate.isSame(this.state.current, 'month')) {
+    while (curDate.startOf('day') <= endDate.startOf('day') ) {
+      if (curDate.day == this.state.current.daysInMonth && !endDate.hasSame(this.state.current, 'month')) {
         if (this.state.showArrow) {
           arrowRight = true;
         }
@@ -450,22 +452,22 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
         this.renderMultiEventBlock(eventsEachDay, startDrawDate, blockLength, props, arrowLeft, arrowRight);
         break;
       }
-      if (curDate.date() == this.state.current.daysInMonth() || curDate.isSame(endDate, "day")) {
+      if (curDate.day == this.state.current.daysInMonth || curDate.hasSame(endDate, "day")) {
         //draw then quit
         this.renderMultiEventBlock(eventsEachDay, startDrawDate, blockLength, props, arrowLeft, arrowRight);
         break;
       }
-      if (curDate.day() == 6) {
+      if (curDate.weekday == 6) {
         //draw then reset
         this.renderMultiEventBlock(eventsEachDay, startDrawDate, blockLength, props, arrowLeft, arrowRight);
-        startDrawDate = moment(curDate).add(1, "day").date();
+        startDrawDate = curDate.plus({day: 1}).day;
         blockLength = 0;
         arrowLeft = false;
         arrowRight = false;
       }
 
       blockLength++;
-      curDate.add(1, "day");
+      curDate = curDate.plus({day: 1});
     }
   }
 
@@ -523,30 +525,30 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
   }
 
   //attempts to render in a placeholder then at the end
-  renderSingleEvent(eventsEachDay: any[], date: number, props: any) {
+  renderSingleEvent(eventsEachDay: any[], date: number, event: EventProps) {
     let foundEmpty = false;
     let nodes = eventsEachDay[date - 1];
     for (let i = 0; i < nodes.length; i++) {
       if (nodes[i].props.className.includes("event") && !nodes[i].props.className.includes("isEvent")) { //target only placeholders
-        nodes[i] = <div className="isEvent" key={`single-event-${gud()}`}><Event {...props} key={`single-event-${gud()}`}/></div>;
+        nodes[i] = <div className="isEvent" key={`single-event-${gud()}`}><Event {...event} key={`single-event-${gud()}`}/></div>;
         foundEmpty = true;
         break;
       }
     }
     if (!foundEmpty) {
-      eventsEachDay[date - 1].push(<div className="isEvent" key={`single-event-${gud()}`}><Event {...props} key={`single-event-${gud()}`}/></div>)
+      eventsEachDay[date - 1].push(<div className="isEvent" key={`single-event-${gud()}`}><Event {...event} key={`single-event-${gud()}`}/></div>)
     }
   }
 
   //get dates based on rrule string between dates
-  static getDatesFromRRule(str: string, eventStart: Moment, betweenStart: Moment, betweenEnd: Moment) {    
+  static getDatesFromRRule(str: string, eventStart: DateTime, betweenStart: DateTime, betweenEnd: DateTime) {    
     //get recurrences using RRule
-    let rstr = `DTSTART:${moment(eventStart).utc(true).format('YYYYMMDDTHHmmss')}Z\n${str}`;
+    let rstr = `DTSTART:${eventStart.setZone('utc', {keepLocalTime: true}).toFormat("yyyyMMdd'T'HHmmss")}Z\n${str}`;
     let rruleSet = rrulestr(rstr, {forceset: true});
     
     //get dates
-    let begin = moment(betweenStart).utc(true).toDate();
-    let end = moment(betweenEnd).utc(true).toDate();
+    let begin = betweenStart.toUTC().toJSDate();
+    let end = betweenEnd.toUTC().toJSDate();
     let dates = rruleSet.between(begin, end);
     return dates;
   }
@@ -574,7 +576,7 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
           </div>
           <div>
             <h2 className="calendar-title">
-              {this.state.monthNames[this.state.current.month()] + " " + this.state.current.year()}
+              {this.state.monthNames[this.state.current.month-1] + " " + this.state.current.year}
             </h2>
           </div>
           <div
@@ -595,7 +597,7 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
               padding-left: 5px;
               text-align: left;
             `}>
-              All times shown your timezone ({moment().tz(this.state.userTimezone).format("z")})
+              All times shown your timezone ({this.state.userTimezone.name})
             </div>
             <div css={css`
               vertical-align: top;

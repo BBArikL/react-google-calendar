@@ -1,4 +1,4 @@
-import { Moment } from 'moment-timezone';
+import { DateTime, Zone } from 'luxon';
 
 export interface CalendarProps {
   apiKey: string;
@@ -15,15 +15,15 @@ export interface CalendarProps {
 export interface CalendarState {
   monthNames: string[];
   days: string[];
-  today: Moment;
-  current: Moment;
+  today: DateTime;
+  current: DateTime;
   calendars: {
     calendarId: string,
     color?: string,
   }[];
   events: any[];
   singleEvents: any[];
-  userTimezone: string;
+  userTimezone: Zone;
   showArrow: boolean;
   showFooter: boolean;
   processedCalendars: string[];

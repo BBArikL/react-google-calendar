@@ -2,15 +2,13 @@
 
 import React from "react";
 
-import moment from "moment-timezone";
-
 import "./index.css";
 
-import { css, jsx } from '@emotion/react'
+import { css } from '@emotion/react'
 
 import Tooltip from "./tooltip";
 
-import { isAllDay, pSBC } from "./utils/helper";
+import { isAllDay, pSBC, to_datetime } from "./utils/helper";
 
 import { Manager, Reference } from 'react-popper';
 
@@ -21,14 +19,14 @@ export default class MultiEvent extends React.Component<MultiEventProps, MultiEv
     super(props);
 
     let color = this.props.color || '#4786ff';
-    let start_time = moment(this.props.startTime);
-    let end_time = moment(this.props.endTime);
+    let start_time = to_datetime(this.props.startTime);
+    let end_time = to_datetime(this.props.endTime);
 
     this.state = {
       startTime: start_time,
       endTime: end_time,
       color: color,
-      darkColor: pSBC(-0.35, color),
+      darkColor: pSBC(-0.35, color) ?? '#FFFF',
       allDay: isAllDay(start_time, end_time),
       showTooltip: false,
     }
@@ -142,7 +140,7 @@ export default class MultiEvent extends React.Component<MultiEventProps, MultiEv
                   }}
                 >
                   {
-                    this.state.allDay ? "" : this.state.startTime.format("h:mma ")
+                    this.state.allDay ? "" : this.state.startTime.toFormat("h:mma ")
                   }
                   <span css={{fontWeight: "500"}}>
                     {this.props.name}
@@ -154,8 +152,8 @@ export default class MultiEvent extends React.Component<MultiEventProps, MultiEv
           </Reference>
           <Tooltip 
             name={this.props.name}
-            startTime={moment(this.props.startTime)}
-            endTime={moment(this.props.endTime)}
+            startTime={to_datetime(this.props.startTime)}
+            endTime={to_datetime(this.props.endTime)}
             description={this.props.description}
             location={this.props.location}
             tooltipStyles={this.props.tooltipStyles}

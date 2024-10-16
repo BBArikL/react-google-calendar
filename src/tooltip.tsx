@@ -2,11 +2,9 @@
 
 import React from "react";
 
-import moment from "moment-timezone";
-
 import "./index.css";
 
-import { css, jsx } from '@emotion/react';
+import { css } from '@emotion/react';
 
 import { Popper } from 'react-popper';
 
@@ -17,6 +15,7 @@ import Subject from "./svg/subject";
 import CalendarToday from "./svg/calendarToday";
 
 import { TooltipProps, TooltipState } from './types/tooltip';
+import { DateTime } from "luxon";
 
 export default class Tooltip extends React.Component<TooltipProps, TooltipState> {
   constructor(props: TooltipProps) {
@@ -30,21 +29,35 @@ export default class Tooltip extends React.Component<TooltipProps, TooltipState>
     
   }
 
-  static getTimeDisplay(startTime: moment.Moment, endTime: moment.Moment, allDay: boolean): string {
-    if (allDay) {
-      let endDate = moment(endTime).subtract(1, "day");
+  static getTimeDisplay(startTime: DateTime, endTime: DateTime, allDay: boolean): string {
+    function getOrdinalSuffix(time: DateTime): string {
+      let rest = time.day % 10;
+      switch (rest){
+        case 1: return "st";
+        case 2: return "nd";
+        case 3: return "rd";
+        default: return "th";
+      }
+    }
 
-      if (endDate.isSame(startTime, "day")) {
-        return startTime.format("dddd, MMMM Do");
+    if (allDay) {
+      let endDate = endTime.minus({day: 1});
+
+      if (endDate.hasSame(startTime, "day")) {
+        return startTime.toFormat("cccc, MMMM d") + getOrdinalSuffix(startTime);
       } else {
-        return startTime.format("MMM Do, YYYY") + " - " + endDate.format("MMM Do, YYYY");
+        return startTime.toFormat("MMM d'" + getOrdinalSuffix(startTime) + "', yyyy")
+        + " - " + endDate.toFormat("MMM d'"+getOrdinalSuffix(endDate)+"', yyyy");
       }
     } else {
-      if (endTime.isSame(startTime, "day")) {
-        return startTime.format("dddd, MMMM Do") + "\n" 
-          + startTime.format("h:mma") + " - " + endTime.format("h:mma");
+      if (endTime.hasSame(startTime, "day")) {
+        return startTime.toFormat("cccc, MMMM d")+ getOrdinalSuffix(startTime) + "\n" 
+          + startTime.toFormat("h:mma").toLowerCase() + " - " + endTime.toFormat("h:mma").toLowerCase();
       } else {
-        return startTime.format("MMM Do, YYYY, h:mma") + " -\n" + endTime.format("MMM Do, YYYY, h:mma");
+        return startTime.toFormat("MMM d'"+getOrdinalSuffix(startTime)+"', yyyy, h:mm")
+         + startTime.toFormat('a').toLowerCase() + " -\n"
+         + endTime.toFormat("MMM d'"+getOrdinalSuffix(endTime)+"', yyyy, h:mm")
+         + endTime.toFormat('a').toLowerCase();
       }
     }
   }

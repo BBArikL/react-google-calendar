@@ -1,12 +1,12 @@
-import { Moment } from 'moment-timezone';
 import { CSSProperties } from 'react';
 import { CSSObject } from '@emotion/react';
+import { DateTime } from 'luxon';
 
 export interface TooltipProps {
   showTooltip: boolean;
   name: string;
-  startTime: Moment;
-  endTime: Moment;
+  startTime: DateTime;
+  endTime: DateTime;
   description?: string;
   location?: string;
   calendarName?: string;

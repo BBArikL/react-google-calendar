@@ -1,34 +1,34 @@
-// @ts-nocheck
-import moment, { Moment } from "moment-timezone";
+// @ts-nocheck -- For function pSBC
+import { DateTime } from 'luxon';
 
 /** determines whether event is an all day event
-  * @param {moment} startTime start of event
-  * @param {moment} endTime end of event
+  * @param {DateTime} startTime start of event
+  * @param {DateTime} endTime end of event
   * @return {boolean} Whether or not it is an all day event
   */
-export function isAllDay(startTime: Moment, endTime: Moment): boolean {
-  return startTime.isSame(moment.parseZone(startTime).startOf("day"), "second")
-    && endTime.isSame(moment.parseZone(endTime).startOf("day"), "second");
+export function isAllDay(startTime: DateTime, endTime: DateTime): boolean {
+  return startTime.hasSame(to_datetime(startTime).startOf("day"), "second")
+    && endTime.hasSame(to_datetime(endTime).startOf("day"), "second");
 }
 
 /** get google calendar link to copy event
-  * @param {moment} startTime start of event
-  * @param {moment} endTime end of event
+  * @param {DateTime} startTime start of event
+  * @param {DateTime} endTime end of event
   * @param {string} name name of event
   * @param {string} description description of event
   * @param {string} location location of event
   * @param {boolean} allDay whether or not it is an all day event
   * @return {string} url of the link
   */
-export function getCalendarURL(startTime: Moment, endTime: Moment, 
+export function getCalendarURL(startTime: DateTime, endTime: DateTime, 
   name: string, description?: string, location?: string, allDay?: boolean): string {
   const url = new URL("https://calendar.google.com/calendar/r/eventedit");
   url.searchParams.append("text", name || "");
   
   if (allDay) {
-    url.searchParams.append("dates", startTime.format("YYYYMMDD") + "/" + endTime.format("YYYYMMDD"));
+    url.searchParams.append("dates", startTime.toFormat("yyyyMMdd") + "/" + endTime.toFormat("yyyyMMdd"));
   } else {
-    url.searchParams.append("dates", startTime.format("YYYYMMDDTHHmmss") + "/" + endTime.format("YYYYMMDDTHHmmss"));
+    url.searchParams.append("dates", startTime.toFormat("yyyyMMdd'T'HHmmss") + "/" + endTime.toFormat("yyyyMMdd'T'HHmmss"));
   }
   
   url.searchParams.append("details", description || "");
@@ -38,21 +38,21 @@ export function getCalendarURL(startTime: Moment, endTime: Moment,
 
 /** determines whether or not it is rendered as a single event or multi event (based on google calendar way)
  * true if duration is at least 24 hours or ends after 12pm on the next day
- * @param {moment} startTime 
- * @param {moment} endTime 
+ * @param {DateTime} startTime 
+ * @param {DateTime} endTime 
  * @return {boolean} whether or not it is a single event
  */
-export function isMultiEvent(startTime: Moment, endTime: Moment): boolean {
-  return moment.duration(endTime.diff(startTime)).asHours() >= 24 || (!startTime.isSame(endTime, 'day') && endTime.hour() >= 12)
+export function isMultiEvent(startTime: DateTime, endTime: DateTime): boolean {
+  return endTime.diff(startTime, 'hours').hours >= 24 || (!startTime.hasSame(endTime, 'day') && endTime.hour >= 12)
 }
 
 //function to shade colors
 //modified from https://github.com/PimpTrizkit/PJs/wiki/12.-Shade,-Blend-and-Convert-a-Web-Color-(pSBC.js)#stackoverflow-archive-begin
-export function pSBC(p,c0,c1?,l?): string {
+export function pSBC(p: number,c0: string,c1?: any,l?: any): string | null {
   let r,g,b,P,f,t,h,i=parseInt,m=Math.round,a=typeof(c1)=="string";
   if(typeof(p)!="number"||p<-1||p>1||typeof(c0)!="string"||(c0[0]!='r'&&c0[0]!='#')||(c1&&!a))return null;
   
-  function pSBCr(d){
+  function pSBCr(d: any){
     let n=d.length,x={};
     if(n>9){
         [r,g,b,a]=d=d.split(","),n=d.length;
@@ -73,4 +73,16 @@ export function pSBC(p,c0,c1?,l?): string {
   a=f.a,t=t.a,f=a>=0||t>=0,a=f?a<0?t:t<0?a:a*P+t*p:0;
   if(h)return"rgb"+(f?"a(":"(")+r+","+g+","+b+(f?","+m(a*1000)/1000:"")+")";
   else return"#"+(4294967296+r*16777216+g*65536+b*256+(f?m(a*255):0)).toString(16).slice(1,f?undefined:-2)
+}
+
+export function to_datetime(time: string | number | Date | DateTime): DateTime {
+  if (time instanceof DateTime){
+    return time;
+  }else if (time instanceof Date){
+    return DateTime.fromJSDate(time);
+  }else if (typeof time === "number"){
+    return DateTime.fromMillis(time);
+  }else {
+    return DateTime.fromISO(time)
+  }
 }
