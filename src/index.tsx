@@ -340,7 +340,7 @@ export default class Calendar extends React.Component<
           //don't render if it is cancelled
           if (
             event.cancelledEvents.some((cancelledMoment: any) =>
-              cancelledMoment.isSame(date, "day"),
+              cancelledMoment.hasSame(date, "day"),
             )
           ) {
             return;
@@ -349,7 +349,7 @@ export default class Calendar extends React.Component<
           let props: EventProps;
           //update information if event has changed
           const changedEvent = event.changedEvents.find((changedEvent: any) =>
-            changedEvent.originalStartTime.isSame(date, "day"),
+            changedEvent.originalStartTime.hasSame(date, "day"),
           );
           if (changedEvent) {
             props = {
@@ -432,7 +432,7 @@ export default class Calendar extends React.Component<
           //check if it is in cancelled
           if (
             event.cancelledEvents.some((cancelledMoment: any) =>
-              cancelledMoment.isSame(date, "day"),
+              cancelledMoment.hasSame(date, "day"),
             )
           ) {
             return;
@@ -440,7 +440,7 @@ export default class Calendar extends React.Component<
 
           //if event has changed
           const changedEvent = event.changedEvents.find((changedEvent: any) =>
-            changedEvent.originalStartTime.isSame(date, "day"),
+            changedEvent.originalStartTime.hasSame(date, "day"),
           );
           let props: EventProps;
           if (changedEvent) {
