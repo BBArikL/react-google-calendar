@@ -2,7 +2,6 @@
 
 import { css } from "@emotion/react";
 import React from "react";
-import { Manager, Reference } from "react-popper";
 
 import "./index.css";
 import FiberManualRecordIcon from "./svg/fiberManualRecord";
@@ -34,7 +33,7 @@ export default class Event extends React.Component<EventProps, EventState> {
 
   render() {
     return (
-      <Manager>
+      <>
         <div
           className="event"
           // @ts-ignore
@@ -47,74 +46,70 @@ export default class Event extends React.Component<EventProps, EventState> {
             }
           `}
         >
-          <Reference>
-            {({ ref }) => (
-              <div
+
+          <div
+            css={[
+              css`
+                border-radius: 3px;
+                width: 100%;
+                &:hover {
+                  cursor: pointer;
+                  background: rgba(81, 86, 93, 0.1);
+                }
+              `,
+              // @ts-ignore
+              this.props.eventStyles,
+            ]}
+            onClick={this.toggleTooltip}
+          >
+            <div
+              className="event-text"
+              css={[
+                {
+                  color: "#51565d",
+                  padding: "3px 0px 3px 20px",
+                  marginRight: "5px",
+                  overflowX: "hidden",
+                  whiteSpace: "nowrap",
+                  position: "relative",
+                  textAlign: "left",
+                },
+                // @ts-ignore
+                this.props.eventTextStyles,
+              ]}
+            >
+              <span
                 css={[
-                  css`
-                    border-radius: 3px;
-                    width: 100%;
-                    &:hover {
-                      cursor: pointer;
-                      background: rgba(81, 86, 93, 0.1);
-                    }
-                  `,
+                  {
+                    position: "absolute",
+                    top: "5px",
+                    left: "2px",
+                    color: this.props.color || "#4786ff",
+                    height: "15px",
+                    width: "15px",
+                  },
                   // @ts-ignore
-                  this.props.eventStyles,
+                  this.props.eventCircleStyles,
                 ]}
-                onClick={this.toggleTooltip}
-                ref={ref}
               >
-                <div
-                  className="event-text"
-                  css={[
-                    {
-                      color: "#51565d",
-                      padding: "3px 0px 3px 20px",
-                      marginRight: "5px",
-                      overflowX: "hidden",
-                      whiteSpace: "nowrap",
-                      position: "relative",
-                      textAlign: "left",
-                    },
-                    // @ts-ignore
-                    this.props.eventTextStyles,
-                  ]}
-                >
-                  <span
-                    css={[
-                      {
-                        position: "absolute",
-                        top: "5px",
-                        left: "2px",
-                        color: this.props.color || "#4786ff",
-                        height: "15px",
-                        width: "15px",
-                      },
-                      // @ts-ignore
-                      this.props.eventCircleStyles,
-                    ]}
-                  >
-                    <FiberManualRecordIcon
-                      fill="currentColor"
-                      fontSize="inherit"
-                      width="100%"
-                    />
-                  </span>
-                  <span
-                    css={css`
+                <FiberManualRecordIcon
+                  fill="currentColor"
+                  fontSize="inherit"
+                  width="100%"
+                />
+              </span>
+              <span
+                css={css`
                       @media (max-width: 599px) {
                         display: none;
                       }
                     `}
-                  >
-                    {this.state.startTime.toFormat("h:mma ")}
-                  </span>
-                  <span css={{ fontWeight: "500" }}>{this.props.name}</span>
-                </div>
-              </div>
-            )}
-          </Reference>
+              >
+                {this.state.startTime.toFormat("h:mma ")}
+              </span>
+              <span css={{ fontWeight: "500" }}>{this.props.name}</span>
+            </div>
+          </div>
           <Tooltip
             name={this.props.name}
             startTime={to_datetime(this.props.startTime)}
@@ -127,7 +122,7 @@ export default class Event extends React.Component<EventProps, EventState> {
             calendarName={this.props.calendarName}
           />
         </div>
-      </Manager>
+      </>
     );
   }
 }
