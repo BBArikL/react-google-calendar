@@ -4,7 +4,6 @@
 
 import { act } from "@testing-library/react";
 import { DateTime } from "luxon";
-import React from "react";
 import { createRoot } from "react-dom/client";
 import { describe, expect, test } from "vitest";
 

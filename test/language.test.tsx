@@ -3,7 +3,6 @@
  */
 
 import { act } from "@testing-library/react";
-import React from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 

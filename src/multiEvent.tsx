@@ -1,7 +1,6 @@
 /** @jsxImportSource @emotion/react */
 import { css } from "@emotion/react";
 import React from "react";
-import { Manager, Reference } from "react-popper";
 
 import "./index.css";
 import Tooltip from "./tooltip";
@@ -101,20 +100,18 @@ export default class MultiEvent extends React.Component<
           position: relative;
         `}
       >
-        <Manager>
-          <Reference>
-            {({ ref }) => (
-              <div
-                css={[
-                  css`
-                    width: ${
-                      // @ts-ignore
-                      "calc(100% - " +
-                      8 *
-                        (Number(this.props.arrowLeft || false) +
-                          Number(this.props.arrowRight || false)) +
-                      "px)"
-                    };
+        <>
+          <div
+            css={[
+              css`
+                width: ${
+                // @ts-ignore
+                "calc(100% - " +
+                8 *
+                (Number(this.props.arrowLeft || false) +
+                  Number(this.props.arrowRight || false)) +
+                "px)"
+                };
                     border-radius: 3px;
                     background: ${this.state.color};
                     &:hover {
@@ -123,48 +120,45 @@ export default class MultiEvent extends React.Component<
                     ${this.props.arrowLeft && leftArrow}
                     ${this.props.arrowRight && rightArrow}
                   `,
-                  // @ts-ignore
-                  this.props.multiEventStyles,
-                ]}
-                onClick={this.toggleTooltip}
-                ref={ref}
-              >
-                <div
-                  className="event-text"
-                  css={{
-                    padding: "3px 0px",
-                    color: "white",
-                    marginLeft: this.props.arrowLeft ? "2px" : "5px",
-                    marginRight: this.props.arrowRight ? "0px" : "5px",
-                    overflowX: "hidden",
-                    whiteSpace: "nowrap",
-                    position: "relative",
-                    textAlign: "left",
-                    "&:hover": {
-                      cursor: "pointer",
-                    },
-                  }}
-                >
-                  {this.state.allDay
-                    ? ""
-                    : this.state.startTime.toFormat("h:mma ")}
-                  <span css={{ fontWeight: "500" }}>{this.props.name}</span>
-                </div>
-              </div>
-            )}
-          </Reference>
-          <Tooltip
-            name={this.props.name}
-            startTime={to_datetime(this.props.startTime)}
-            endTime={to_datetime(this.props.endTime)}
-            description={this.props.description}
-            location={this.props.location}
-            tooltipStyles={this.props.tooltipStyles}
-            showTooltip={this.state.showTooltip}
-            closeTooltip={this.closeTooltip}
-            calendarName={this.props.calendarName}
-          />
-        </Manager>
+              // @ts-ignore
+              this.props.multiEventStyles,
+            ]}
+            onClick={this.toggleTooltip}
+          >
+            <div
+              className="event-text"
+              css={{
+                padding: "3px 0px",
+                color: "white",
+                marginLeft: this.props.arrowLeft ? "2px" : "5px",
+                marginRight: this.props.arrowRight ? "0px" : "5px",
+                overflowX: "hidden",
+                whiteSpace: "nowrap",
+                position: "relative",
+                textAlign: "left",
+                "&:hover": {
+                  cursor: "pointer",
+                },
+              }}
+            >
+              {this.state.allDay
+                ? ""
+                : this.state.startTime.toFormat("h:mma ")}
+              <span css={{ fontWeight: "500" }}>{this.props.name}</span>
+            </div>
+          </div>
+        </>
+        <Tooltip
+          name={this.props.name}
+          startTime={to_datetime(this.props.startTime)}
+          endTime={to_datetime(this.props.endTime)}
+          description={this.props.description}
+          location={this.props.location}
+          tooltipStyles={this.props.tooltipStyles}
+          showTooltip={this.state.showTooltip}
+          closeTooltip={this.closeTooltip}
+          calendarName={this.props.calendarName}
+        />
       </div>
     );
   }
